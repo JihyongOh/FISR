@@ -1,6 +1,6 @@
 """
 FISR_warp_mat_with_flo.py
-pwcnet_predict_from_img_pairs.py
+modified from 'pwcnet_predict_from_img_pairs.py'
 
 Run inference on a list of images pairs.
 
