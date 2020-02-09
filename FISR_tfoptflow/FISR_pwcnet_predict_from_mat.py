@@ -1,6 +1,6 @@
 """
 FISR_pwcnet_predict_from_mat.py
-pwcnet_predict_from_img_pairs.py
+modified from 'pwcnet_predict_from_img_pairs.py'
 
 Run inference on a list of images pairs.
 
