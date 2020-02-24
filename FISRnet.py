@@ -62,7 +62,9 @@ class FISRnet(object):
 
         """ Making settings """
         self.frame_folder_path = args.frame_folder_path
+        self.FISR_input_size = args.FISR_input_size
         self.frame_num = args.frame_num
+        self.FISR_test_patch = args.FISR_test_patch
         """ Print all 'args' information """
         print('Model arguments, [{:s}]'.format((str(datetime.now())[:-7])))
         for arg in vars(args):
@@ -925,6 +927,143 @@ class FISRnet(object):
         print("######### Estimated Inference Time (per one output 4K frame): %.8f[s]  #########" % (
                     np.mean(inf_time) * self.test_patch[0] * self.test_patch[1]))
 
+    def FISR_for_video(self, flow_file_name, warp_file_name):
+        """" Make joint spatial-temporal upscaling (FISR) frames for input frames in one folder """
+        # saver to save model
+        self.saver = tf.train.Saver()
+        tf.global_variables_initializer().run()  # before "restore"
+
+        # restore the checkpoint
+        _, _ = self.load(self.checkpoint_dir)
+
+        test_data_path = glob.glob(os.path.join(self.frame_folder_path, '*.png')) # YUV
+        num_fr = self.frame_num
+
+        """ Make (ex))"E:/FISR_Github/FISR_test_folder/scene1/FISR_frames" to save frames  """
+        FISR_img_dir = os.path.join(self.frame_folder_path,
+                                    'FISR_frames')
+        check_folder(FISR_img_dir)
+
+        print(" Start to read flow data (FISR test).")
+        flow_path = flow_file_name
+        flow = read_flo_file_5dim(flow_path)  # [N, 8, h, w, 2], here: [N, 2, h, w, 2]
+        print(" Successfully load.")
+        flow = np.concatenate((flow[0:num_fr - 2, :, :, :, :], flow[1:num_fr - 1, :, :, :, :]),
+                              axis=1)  # [N-1, 2+2(bidirectional), h, w, 2],
+        flow = merge_seq_dim(flow)
+
+        print(" Start to read warped data (FISR test).")
+        warp_path = warp_file_name
+        warp = read_mat_file_warp(warp_path, 'pred')  # [N, 2, h, w, 3]
+        warp = np.concatenate((warp[0:num_fr - 2, :, :, :, :], warp[1:num_fr - 1, :, :, :, :]),
+                              axis=1)  # [N-1, 2+2(bidirectional), h, w, 3]
+        print(" Successfully load.")
+        warp = merge_seq_dim(warp)
+
+
+
+        num_patch = self.FISR_test_patch  # due to memory capacity, we divide the whole image into small patches.
+        patch_boundary = 32  # multiple of 32
+
+
+        inf_time = []
+        start_time = time.time()
+
+        """ make "test_img_dir" per experiment """
+        test_img_dir = os.path.join(self.test_img_dir, self.model_dir)
+        check_folder(test_img_dir)
+
+        n_in_seq = 3
+        n_test_in_seq = 5
+        H, W = self.FISR_input_size
+
+        for fr in range(num_fr - 2):
+            ###======== Read & Compose Data ========###
+            for seq_i in range(n_in_seq):
+                img_temp = np.array(Image.open(test_data_path[fr + seq_i]))
+                if seq_i == 0:
+                    img = img_temp
+                else:
+                    img = np.concatenate((img, img_temp), axis=2)
+
+            ###======== Crop Data for 32 multiple ========###
+            # crop img for u-net (32x32)
+            c = n_in_seq * 3
+            h = H - np.remainder(H, 32 * num_patch[0])
+            w = W - np.remainder(W, 32 * num_patch[1])
+            img = img[:h, :w, :]  # now, it is divided by 32 with no remainder.
+
+            ###======== Normalize & Clip Image ========###
+            img = np.array(img, dtype=np.double) / 255.
+            img = np.expand_dims(np.clip(img, 0, 1), axis=0)
+
+            ###======== Normalize & Clip Flow ========###
+            flow_sample = flow[fr, :h, :w, :]
+            flow_sample = flow_sample / H / 2
+            flow_sample = np.expand_dims(np.clip(flow_sample, -1, 1), axis=0)
+
+            ###======== Normalize & Clip Warp Image ========###
+            warp_sample = warp[fr, :h, :w, :]
+            warp_sample = np.expand_dims(np.clip(warp_sample, 0, 1), axis=0)
+
+            ###======== Generate Input ========###
+            input = np.concatenate([img, flow_sample, warp_sample], axis=3)
+            test_Pred_full = np.zeros((h * self.scale_factor, w * self.scale_factor, c))
+
+            ###======== Divide & Process due to Limited Memory ========###
+            for p in range(num_patch[0] * num_patch[1]):
+                pH = p // num_patch[1]  # patch index (priority: w=>h)
+                pW = p % num_patch[1]  # patch index
+                sH = h // num_patch[0]  # patch size
+                sW = w // num_patch[1]  # patch size
+
+                # process data considering patch boundary
+                H_low_ind, H_high_ind, W_low_ind, W_high_ind, add_H, add_W = \
+                    get_HW_boundary(patch_boundary, h, w, pH, sH, pW, sW)
+
+                ###======== Set Model ========###
+                data_test_ph = tf.placeholder(tf.float32,
+                                              shape=(1, sH + add_H, sW + add_W, c + 8 + 12))
+                [_, _, test_Pred] = self.model(data_test_ph, self.scale_factor, reuse=True, scope='FISRnet')
+
+                ###======== Pre-process Data ========###
+                simg = input[:, H_low_ind:H_high_ind, W_low_ind:W_high_ind, :]
+
+                ###======== Run Session ========###
+                rs_time = time.time()
+                test_Pred_patch = self.sess.run(
+                    test_Pred, feed_dict={data_test_ph: simg})
+                inf_time.append(time.time() - rs_time)
+
+                # trim patch boundary
+                test_Pred_trim = trim_patch_boundary(test_Pred_patch, patch_boundary, h, w, pH, sH, pW,
+                                                     sW, self.scale_factor)
+                # store in pred_full
+                test_Pred_full[pH * sH * self.scale_factor: (pH + 1) * sH * self.scale_factor,
+                pW * sW * self.scale_factor: (pW + 1) * sW * self.scale_factor, :] = np.squeeze(test_Pred_trim)
+
+            ###======== Process Prediction & GT ========###
+            test_pred = np.clip(test_Pred_full, 0, 1)
+
+
+            ###======== Save Predictions as RGB Images (YUV->RGB) ========###
+            # by considering the overlapping, the frame from the later sliding window is taken for simplicity ("if sample_i == 2:")
+            pred = np.uint8(test_pred * 255)  # YUV, range of [0,255]
+            
+            for seq_i in range(3):
+                rgb_img = utils.YUV2RGB_matlab(pred[:, :, seq_i * 3:(seq_i + 1) * 3])
+                pred_img = Image.fromarray(rgb_img.astype('uint8'))
+                fr_name = FISR_img_dir + '/pred_{}.png'.format(
+                    str(fr * 2 + seq_i).zfill(math.ceil(math.log10(2*(num_fr-1)))))
+                pred_img.save(fr_name)
+                # fit the video format. ex) if num_fr = 60 => math.ceil(math.log10(num_fr))) = 2
+
+            print(
+                " <FISR processing> [%4d/%4d]-th input multiple data sample (stride1), time: %4.4f(minutes)  " \
+                % (fr + 1, num_fr - 2, (time.time() - start_time) / 60))
+
+        print("######### Estimated Inference Time (per one output 4K frame): %.8f[s]  #########" % (
+                np.mean(inf_time) * self.test_patch[0] * self.test_patch[1]))
 
     @property
     def model_dir(self):
