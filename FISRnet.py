@@ -1057,6 +1057,11 @@ class FISRnet(object):
                     str(fr * 2 + seq_i).zfill(math.ceil(math.log10(2*(num_fr-1)))))
                 pred_img.save(fr_name)
                 # fit the video format. ex) if num_fr = 60 => math.ceil(math.log10(num_fr))) = 2
+                yuv_img = pred[:, :, seq_i * 3:(seq_i + 1) * 3]
+                yuv_img = Image.fromarray(yuv_img.astype('uint8'))
+                fr_name = FISR_img_dir + '/pred_YUV_{}.png'.format(
+                    str(fr * 2 + seq_i).zfill(math.ceil(math.log10(2 * (num_fr - 1)))))
+                yuv_img.save(fr_name)
 
             print(
                 " <FISR processing> [%4d/%4d]-th input multiple data sample (stride1), time: %4.4f(minutes)  " \
