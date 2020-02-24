@@ -1,5 +1,5 @@
 """
-"FISR_warp_mat_with_flo.py"
+"FISR_for_video_warp_img_with_flo.py"
 
 modified from "pwcnet_predict_from_img_pairs.py"
 
@@ -11,12 +11,14 @@ Licensed under the MIT License (see LICENSE for details)
 """
 
 from __future__ import absolute_import, division, print_function
+from PIL import Image
 import h5py
 import hdf5storage
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-
+import os
+import glob
 
 def read_mat_file(data_fname, data_name):
     # read training data (.mat file) [H, W, C, N_seq, N]
@@ -30,7 +32,7 @@ def read_mat_file(data_fname, data_name):
     return data
 
 
-def YUV2RGB_matlab(yuv):
+def YUV2RGB(yuv):
     Tinv = np.array(
         [[0.00456621, 0., 0.00625893], [0.00456621, -0.00153632, -0.00318811], [0.00456621, 0.00791071, 0.]])
     offset = [[16], [128], [128]]
@@ -43,7 +45,7 @@ def YUV2RGB_matlab(yuv):
     return rgb
 
 
-def RGB2YUV_matlab(rgb):
+def RGB2YUV(rgb):
     T = np.array([[65.481, 128.553, 24.966], [-37.797, -74.203, 112], [112, -93.786, -18.214]])
     offset = [[16], [128], [128]]
     T = T / 255
@@ -92,42 +94,48 @@ def read_flo_file_5dim(filename):
     return data2d
 
 
-if __name__ == '__main__':
-    """ (when preparing 'train') Example to make './data/train/warped/LR_Surfing_SlamDunk_5seq_ss1_warp.mat' from './data/train/flow/LR_Surfing_SlamDunk_5seq_ss1.flo' '"""
-    """ To make warped images data with .mat file by using pre-made .flo file. (FISR_pwcnet_predict_from_mat.py)"""
+def FISR_for_video_Warp_Img(args,flow_file_name):
+    """ (when preparing 'FISR_for_video') Example to make 'E:/FISR_Github/FISR_test_folder/scene1/scene1_ss1_fr5_warp.mat' from 'E:/FISR_Github/FISR_test_folder/scene1/scene1_test_ss1_fr5.flo' '"""
     """ Please check '# check' marks in this code to fit your usage. """
-    img_pairs = []
-    scale = 2 # check, upscaling factor for spatial resolution
-    ss = 1  # check, temporal stride (1 or 2)
-
+    num_fr =  args.frame_num  # check, in our test set (=5)
+    
     # Read data from mat file
-    data_path = 'E:/FISR_Github/data/train/LR_LFR/LR_Surfing_SlamDunk_5seq.mat' # our pre-made 4K dataset
-    data = read_mat_file(data_path, 'LR_data')
-    sz = data.shape
-    flow_path = 'E:/FISR_Github/data/train/flow/LR_Surfing_SlamDunk_5seq_ss{}.flo'.format(ss)
-
+    data_list = glob.glob(os.path.join(args.frame_folder_path, '*.png'))  # read YUV format images.
+    ss=1
+    h = args.FISR_input_size[0]  # check, assumption: 2K input, then, 1080
+    w = args.FISR_input_size[1]  # check, assumption: 2K input, then, 1920
+    pred = np.zeros((num_fr - 1, 2, h, w, 3), dtype=np.float32)
+    
+    flow_path = flow_file_name
     flow = read_flo_file_5dim(flow_path)
+    
+    for fr in range(num_fr - 1):
+        rgb_1 = Image.open(data_list[ss * fr])
+        rgb_1 = np.array(rgb_1, dtype=np.float32)
+        rgb_1 = YUV2RGB(rgb_1) # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
 
-    pred = np.zeros((sz[0], 8 // ss, sz[2], sz[3], 3), dtype=np.float32)
-    for num in range(sz[0]):
-        for seq in range(sz[1] - (ss * 2 - 1)):
-            rgb_1 = YUV2RGB_matlab(data[num, ss * seq, :, :, :])
-            rgb_2 = YUV2RGB_matlab(data[num, ss * (seq + 1), :, :, :])
-            ### 1 -> 2 ###
-            flow_sample = flow[num, 2 * seq, :, :, :]
-            warped_img_1 = warp_flow(rgb_2, flow_sample * 0.5) # check, middle frame
-            pred[num, 2 * seq, :, :, :] = RGB2YUV_matlab(warped_img_1)
-            ### 2 -> 1 ###
-            flow_sample = flow[num, 2 * seq + 1, :, :, :]
-            warped_img_2 = warp_flow(rgb_1, flow_sample * 0.5)
-            pred[num, 2 * seq + 1, :, :, :] = RGB2YUV_matlab(warped_img_2)
-        print(num)
+        rgb_2 = Image.open(data_list[ss * (fr + 1)])
+        rgb_2 = np.array(rgb_2, dtype=np.float32)
+        rgb_2 = YUV2RGB(rgb_2) # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
+
+        ### 1 -> 2 ###
+        flow_sample = flow[fr, 0, :, :, :]
+        warped_img_1 = warp_flow(rgb_2, flow_sample * 0.5)
+        pred[fr, 0, :, :, :] = RGB2YUV(warped_img_1)
+        ### 2 -> 1 ###
+        flow_sample = flow[fr, 1, :, :, :]
+        warped_img_2 = warp_flow(rgb_1, flow_sample * 0.5)
+        pred[fr, 1, :, :, :] = RGB2YUV(warped_img_2)
+        print("Processing for warping imgs [%5d/%5d]"%(fr+1,num_fr))
+
     pred_warp = {}
     pred_warp[u'pred'] = pred
-    hdf5storage.write(pred_warp, '.', 
-                      'E:/FISR_Github/data/train/warped/LR_Surfing_SlamDunk_5seq_ss{}_warp.mat'.format(ss), 
-                      matlab_compatible=True) # check
-
+    warp_file_name = args.frame_folder_path + '/' + args.frame_folder_path.split('/')[-1] + '_ss{}_fr{}_warp.mat'.format(ss, num_fr)
+    hdf5storage.write(pred_warp, '.',
+                      warp_file_name,
+                      matlab_compatible=True)
+    print('[*] Warp file saved!')
+    
     '''
     plt.figure(2, figsize=(5*4, 5))
     plt.subplot(1, 4, 1)
@@ -140,4 +148,5 @@ if __name__ == '__main__':
     plt.imshow(np.uint8(warped_img_2))
     plt.show()
     '''
+    return warp_file_name
 

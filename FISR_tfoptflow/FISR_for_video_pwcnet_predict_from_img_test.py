@@ -1,5 +1,5 @@
 """
-"FISR_pwcnet_predict_from_img_test.py"
+"FISR_for_video_pwcnet_predict_from_img_test.py"
 
 modified from "pwcnet_predict_from_img_pairs.py"
 
@@ -12,14 +12,14 @@ Licensed under the MIT License (see LICENSE for details)
 
 from __future__ import absolute_import, division, print_function
 from copy import deepcopy
-from model_pwcnet import ModelPWCNet, _DEFAULT_PWCNET_TEST_OPTIONS
-from visualize import display_img_pairs_w_flows
-from skimage.transform import resize
+from .model_pwcnet import ModelPWCNet, _DEFAULT_PWCNET_TEST_OPTIONS
+from .visualize import display_img_pairs_w_flows
 from PIL import Image
+from skimage.transform import resize
+
+import os
 import h5py
 import numpy as np
-import glob
-import os
 import glob
 
 # TODO: Set device to use for inference
@@ -81,9 +81,8 @@ def write_flow(flow, filename):
     f.close()
 
 
-if __name__ == '__main__':
-    """ (when preparing 'test') Example to make './data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo' from './data/test/LR_LFR/*.png' (YUV images in folder) '"""
-    """ Then, you can also make the warped images data with .mat file by modifying 'FISR_warp_mat_with_flo.py' with adequate directories. """
+def FISR_for_video_Compute_Flow(args):
+    """ (when preparing 'FISR_for_video') Example to make 'E:/FISR_Github/FISR_test_folder/scene1/scene1_test_ss1_fr5.flo' from 'E:/FISR_Github/FISR_test_folder/scene1/*.png' (YUV images in folder) '"""
     """ Please check '# check' marks in this code to fit your usage. """
     
     # Configure the model for inference, starting with the default options
@@ -108,41 +107,42 @@ if __name__ == '__main__':
     # Instantiate the model in inference mode and display the model configuration
     nn = ModelPWCNet(mode='test', options=nn_opts)
 
-    # Read data from mat file
-    data_list = glob.glob('E:/FISR_Github/data/test/LR_LFR/*.png') # read YUV format images. 
-    h = 1080 # check, assumption: 2K input
-    w = 1920 # check, assumption: 2K input
-    N_seq = 5  # check
+    # Read data from scene folder
+    data_list = glob.glob(os.path.join(args.frame_folder_path, '*.png')) # read YUV format images.
+    h = args.FISR_input_size[0] # check, assumption: 2K input, then, 1080
+    w = args.FISR_input_size[1] # check, assumption: 2K input, then, 1920
+    num_fr = args.frame_num  # check, in our test set (=5)
 
     img_pairs = []
     scale = 2  # check
     ss = 1  # check
-    pred = np.zeros((len(data_list)//N_seq, 8//ss, h, w, 2), dtype=np.float32)
-    for num in range(len(data_list)//N_seq):
-        for seq in range(N_seq-(ss*2-1)):
-            rgb_1 = Image.open(data_list[num * N_seq + ss*seq])
-            rgb_1 = np.array(rgb_1, dtype=np.float32)
-            rgb_1 = YUV2RGB(rgb_1)  # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
-            
-            rgb_2 = Image.open(data_list[num * N_seq + ss*(seq + 1)])
-            rgb_2 = np.array(rgb_2, dtype=np.float32)
-            rgb_2 = YUV2RGB(rgb_2)  # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
-            
-            rgb_1 = resize(rgb_1, (h * scale, w * scale))
-            rgb_2 = resize(rgb_2, (h * scale, w * scale))
+    pred = np.zeros((num_fr-1, 2, h, w, 2), dtype=np.float32) # bidirectional
+    for fr in range(num_fr-1):
+        rgb_1 = Image.open(data_list[ss*fr])
+        rgb_1 = np.array(rgb_1, dtype=np.float32)
+        rgb_1 = YUV2RGB(rgb_1) # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
 
-            img_pairs.append((np.array(rgb_1, dtype=np.uint8), np.array(rgb_2, dtype=np.uint8)))
-            img_pairs.append((np.array(rgb_2, dtype=np.uint8), np.array(rgb_1, dtype=np.uint8)))
-            # Generate the predictions
-            flow = nn.predict_from_img_pairs(img_pairs, batch_size=1, verbose=False)
-            flow = np.array(flow)
-            img_pairs = []
+        rgb_2 = Image.open(data_list[ss*(fr+1)])
+        rgb_2 = np.array(rgb_2, dtype=np.float32)
+        rgb_2 = YUV2RGB(rgb_2) # since PWC-Net works on RGB images, we have to convert YUV img into RGB img.
 
-            flow_rs = resize(flow, (flow.shape[0], h, w, 2), anti_aliasing=True)/scale
-            pred[num, 2*seq:2*(seq+1), :, :, :] = flow_rs
-            
-        print(num)
+        rgb_1 = resize(rgb_1, (h * scale, w * scale))
+        rgb_2 = resize(rgb_2, (h * scale, w * scale))
 
+        img_pairs.append((np.array(rgb_1, dtype=np.uint8), np.array(rgb_2, dtype=np.uint8)))
+        img_pairs.append((np.array(rgb_2, dtype=np.uint8), np.array(rgb_1, dtype=np.uint8)))
+        # Generate the predictions
+        flow = nn.predict_from_img_pairs(img_pairs, batch_size=1, verbose=False)
+        flow = np.array(flow)
+        img_pairs = []
+
+        flow_rs = resize(flow, (flow.shape[0], h, w, 2), anti_aliasing=True)/scale
+        pred[fr, :, :, :, :] = flow_rs
+        print("Processing for computing flows [%5d/%5d]"%(fr+1,num_fr))
     print(pred.shape)
-    write_flow(pred, 'E:/FISR_Github/data/test/flow/LR_Surfing_SlamDunk_test_ss{}.flo'.format(ss)) # check
+    flow_file_name = args.frame_folder_path +'/'+ args.frame_folder_path.split('/')[-1] + '_test_ss{}_fr{}.flo'.format(ss, num_fr)
+    write_flow(pred, flow_file_name) 
+    print('[*] Flow file saved!')
+    
+    return flow_file_name
     # display_img_pairs_w_flows(img_pairs, flow)

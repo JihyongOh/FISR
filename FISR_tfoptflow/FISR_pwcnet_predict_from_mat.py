@@ -1,10 +1,11 @@
 """
-FISR_pwcnet_predict_from_mat.py
-modified from 'pwcnet_predict_from_img_pairs.py'
+"FISR_pwcnet_predict_from_mat.py"
+
+modified from "pwcnet_predict_from_img_pairs.py"
 
 Run inference on a list of images pairs.
 
-Written by Phil Ferriere
+Originally written by Phil Ferriere
 
 Licensed under the MIT License (see LICENSE for details)
 """
@@ -13,8 +14,8 @@ from __future__ import absolute_import, division, print_function
 from copy import deepcopy
 from model_pwcnet import ModelPWCNet, _DEFAULT_PWCNET_TEST_OPTIONS
 from visualize import display_img_pairs_w_flows
-import h5py
 from skimage.transform import resize
+import h5py
 import numpy as np
 
 # TODO: Set device to use for inference
@@ -37,7 +38,7 @@ def read_mat_file(data_fname, data_name):
     return data
 
 
-def YUV2RGB_matlab(yuv):
+def YUV2RGB(yuv):
     Tinv = np.array([[0.00456621, 0., 0.00625893], [0.00456621, -0.00153632, -0.00318811], [0.00456621,  0.00791071,  0.]])
     offset = [[16], [128], [128]]
     T = 255 * Tinv
@@ -114,8 +115,8 @@ if __name__ == '__main__':
     pred = np.zeros((sz[0], 8//ss, sz[2], sz[3], 2), dtype=np.float32) # check, in our case
     for num in range(sz[0]):  
         for seq in range(sz[1]-(ss*2-1)):
-            rgb_1 = YUV2RGB_matlab(data[num, ss*seq, :, :, :]) # check, since PWC-Net works on RGB images, we have to convert our YUV dataset.
-            rgb_2 = YUV2RGB_matlab(data[num, ss*(seq+1), :, :, :])
+            rgb_1 = YUV2RGB(data[num, ss*seq, :, :, :]) # check, since PWC-Net works on RGB images, we have to convert our YUV dataset.
+            rgb_2 = YUV2RGB(data[num, ss*(seq+1), :, :, :])
             rgb_1 = resize(rgb_1, (sz[2] * scale, sz[3] * scale)) # check, for better prediction, we multiply x2 (in larger spatial resolution)
             rgb_2 = resize(rgb_2, (sz[2] * scale, sz[3] * scale))
             img_pairs.append((np.array(rgb_1, dtype=np.uint8), np.array(rgb_2, dtype=np.uint8)))
