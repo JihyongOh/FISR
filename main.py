@@ -13,7 +13,8 @@ from utils import show_all_variables
 from utils import check_folder
 import utils
 from FISRnet import FISRnet
-
+from FISR_tfoptflow.FISR_for_video_pwcnet_predict_from_img_test import FISR_for_video_Compute_Flow
+from FISR_tfoptflow.FISR_for_video_warp_img_with_flo import FISR_for_video_Warp_Img
 """ Select GPU number """
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -24,7 +25,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--net_type', type=str, default='FISRnet', choices=['FISRnet'], help='The type of Net')
     parser.add_argument('--fraction_gpu', type=float, default=1.0, help='The fraction rate of gpu')
-    parser.add_argument('--phase', type=str, default='test', choices=['train', 'test', 'FISR_for_video'])
+    parser.add_argument('--phase', type=str, default='FISR_for_video', choices=['train', 'test', 'FISR_for_video'])
     parser.add_argument('--scale_factor', type=float, default=2, help='scale factor for SR')
     
     """ Information of directories """
@@ -94,8 +95,10 @@ def parse_args():
     """ Settings for FISRing (when [phase=='FISR_for_video']) """
     parser.add_argument('--frame_folder_path', type=str, 
                         default='E:/FISR_Github/FISR_test_folder/scene1', help='Folder root, which contains .png files  (YUV) of frames.')
+    parser.add_argument('--FISR_input_size', type=tuple, default=(1080, 1920),
+                        help='Input size for FISR, default=2K')
     parser.add_argument('--frame_num', type=int,
-                        default=60, help='Numbers of frames to convert')
+                        default=5, help='Numbers of frames to convert')
     parser.add_argument('--FISR_test_patch', type=tuple, default=(2, 2),
                         help='Divide img into patches in case of low memory')
 
@@ -156,7 +159,7 @@ def main():
     
         """ test after training """
         tf.reset_default_graph()  # to delete all graph
-        """ to load a lighter train data to reduce time consumption """
+        """ to load a lighter train data to reduce a time consumption for loading """
         args.train_data_path = './data/LR_sample_5seq.mat'
         args.train_label_path = './data/HR_sample_5seq.mat'
         """ Open session """
@@ -188,7 +191,7 @@ def main():
     elif args.phase == 'test':
         """ measure the performance (PSNR & SSIM) """
         
-        """ to load a lighter train data to reduce time consumption """
+        """ to load a lighter train data to reduce a time consumption for loading """
         args.train_data_path = './data/LR_sample_5seq.mat'
         args.train_label_path = './data/HR_sample_5seq.mat'
         """ Open session """
@@ -217,6 +220,45 @@ def main():
             print("[*] Exp: ", args.exp_num)
             print("[*] Testing finished! ")
 
+
+    elif args.phase == 'FISR_for_video':
+        """" Make joint spatial-temporal upscaling (FISR) frames for input frames in one folder """
+        """ Open session for computing optical flows by PWC-Net """
+        print("[*] Computing and making flow file starts")
+        flow_file_name = FISR_for_video_Compute_Flow(args) # make flow file in '.flo' format.
+        tf.reset_default_graph()  # to delete all graph
+        print("[*] Making warp file starts")
+        warp_file_name = FISR_for_video_Warp_Img(args,flow_file_name) # make warp file in '.mat' format.
+        
+        """ to load a lighter train data to reduce a time consumption for loading """
+        args.train_data_path = './data/LR_sample_5seq.mat'
+        args.train_label_path = './data/HR_sample_5seq.mat'
+        """ Open session """
+        with tf.Session(config=tf.ConfigProto(
+                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=args.fraction_gpu,
+                                          allow_growth=True))) as sess:
+
+            model_net = None
+            for model in models:
+                if args.net_type == model.model_name:
+                    model_net = model(sess, args)
+            if model_net is None:
+                raise Exception("[!] There is no option for " + args.net_type)
+
+            # build graph
+            print("[*] Exp: ", args.exp_num)
+            print("[*] Building FISRnet ...")
+            model_net.build_model()
+            print("[*] Successfully build.")
+            # show network architecture
+            show_all_variables()
+            # launch the graph in a session
+            print("Model:", args.net_type)
+            print("[*] FISR Testing starts")
+            model_net.FISR_for_video(flow_file_name, warp_file_name)
+            print("[*] Exp: ", args.exp_num)
+            print("[*] FISR Testing finished! ")
+            
 
 if __name__ == '__main__':
     main()
