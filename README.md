@@ -21,8 +21,7 @@ Our code is implemented using Tensorflow, and was tested under the following set
 1. Download the source code in a directory of your choice **\<source_path\>**.
 2. Download our 4K test dataset from [this link]( https://www.dropbox.com/s/101g9kdobgwl8x6/test.zip?dl=0) and unzip the 'test' folder in **\<source_path\>/data/test**, then you can get an input dataset (LR LFR), a flow data, a warped data and an output dataset (HR HFR) placed in **\<source_path\>/data/test/LR_LFR**, **\<source_path\>/data/test/flow** , **\<source_path\>/data/test/warped**  and **\<source_path\>/data/test/HR_HFR**, respectively. 
 3. Download the pre-trained weights from [this link]( https://www.dropbox.com/s/usmoijfvnr3ok1q/FISRnet_exp1.zip?dl=0) and then unzip it to place in **\<source_path\>/checkpoint_dir/FISRnet_exp1**.
-4. Place the both **HR_sample_5seq.mat** and **LR_sample_5seq.mat** files in **\<source_path\>/data/** for a faster loading (code issue cause of dependency in our code style). 
-5. Run **main.py** with the following options in parse_args:  
+4. Run **main.py** with the following options in parse_args:  
 **(i) For testing the our 4K test dataset input:**  
 '--phase' as **'test'**, '--exp_num' as **1**, '--test_data_path' as **'./data/test/LR_LFR'**, '--test_flow_data_path' as **'./data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo'**, '--test_warped_data_path' as **'./data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat'**, ‘--test_label_path’ as **'./data/test/HR_HFR**        
 **(ii) For FISR testing on an one single folder, which contains a single scene (.png file input in YUV format):**  
