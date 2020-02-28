@@ -744,9 +744,16 @@ class FISRnet(object):
 
 
     def test(self):
+        input = tf.placeholder(tf.float32,
+                                      shape=(8, 192,  192, 29))
+        _,_,_ = self.model(input
+                   , self.scale_factor, reuse=False, scope='FISRnet')
+        vl = [v for v in tf.global_variables() if
+              "FISRnet" in v.name]
+        self.saver = tf.train.Saver(var_list=vl)
+        
         """" Measure the performance in YUV color space. """
         # saver to save model
-        self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()  # before "restore"
 
         # restore the checkpoint
@@ -825,7 +832,7 @@ class FISRnet(object):
 
                 ###======== Normalize & Clip Flow ========###
                 flow_sample = flow[scene_i, :h, :w, 4*sample_i:4*sample_i+8]
-                flow_sample = flow_sample/self.data_sz[1]/2
+                flow_sample = flow_sample/96/2
                 flow_sample = np.expand_dims(np.clip(flow_sample, -1, 1), axis=0)
 
                 ###======== Normalize & Clip Warp Image ========###
@@ -928,9 +935,16 @@ class FISRnet(object):
                     np.mean(inf_time) * self.test_patch[0] * self.test_patch[1]))
 
     def FISR_for_video(self, flow_file_name, warp_file_name):
+        input = tf.placeholder(tf.float32,
+                               shape=(8, 192, 192, 29))
+        _, _, _ = self.model(input
+                             , self.scale_factor, reuse=False, scope='FISRnet')
+        vl = [v for v in tf.global_variables() if
+              "FISRnet" in v.name]
+        self.saver = tf.train.Saver(var_list=vl)
+        
         """" Make joint spatial-temporal upscaling (FISR) frames for input frames in one folder """
         # saver to save model
-        self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()  # before "restore"
 
         # restore the checkpoint
@@ -1046,10 +1060,9 @@ class FISRnet(object):
             test_pred = np.clip(test_Pred_full, 0, 1)
 
 
-            ###======== Save Predictions as RGB Images (YUV->RGB) ========###
-            # by considering the overlapping, the frame from the later sliding window is taken for simplicity ("if sample_i == 2:")
+            ###======== Save Predictions as both RGB & YUV Images  ========###
+            # by considering the overlapping, the frame from the later sliding window is taken for simplicity
             pred = np.uint8(test_pred * 255)  # YUV, range of [0,255]
-            
             for seq_i in range(3):
                 rgb_img = utils.YUV2RGB_matlab(pred[:, :, seq_i * 3:(seq_i + 1) * 3])
                 pred_img = Image.fromarray(rgb_img.astype('uint8'))
