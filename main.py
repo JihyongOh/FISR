@@ -159,9 +159,6 @@ def main():
     
         """ test after training """
         tf.reset_default_graph()  # to delete all graph
-        """ to load a lighter train data to reduce a time consumption for loading """
-        args.train_data_path = './data/LR_sample_5seq.mat'
-        args.train_label_path = './data/HR_sample_5seq.mat'
         """ Open session """
         with tf.Session(config=tf.ConfigProto(
                 gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=args.fraction_gpu,
@@ -176,11 +173,6 @@ def main():
 
             # build graph again
             print("[*] Exp: ", args.exp_num)
-            print("[*] Building FISRnet ...")
-            model_net.build_model()
-            print("[*] Successfully build.")
-            # show network architecture
-            show_all_variables()
             # launch the graph in a session
             print("[*] Testing starts")
             model_net.test()
@@ -190,10 +182,6 @@ def main():
     
     elif args.phase == 'test':
         """ measure the performance (PSNR & SSIM) """
-        
-        """ to load a lighter train data to reduce a time consumption for loading """
-        args.train_data_path = './data/LR_sample_5seq.mat'
-        args.train_label_path = './data/HR_sample_5seq.mat'
         """ Open session """
         with tf.Session(config=tf.ConfigProto(
             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=args.fraction_gpu,
@@ -208,11 +196,6 @@ def main():
     
             # build graph
             print("[*] Exp: ", args.exp_num)
-            print("[*] Building FISRnet ...")
-            model_net.build_model()
-            print("[*] Successfully build.")
-            # show network architecture
-            show_all_variables()
             # launch the graph in a session
             print("Model:", args.net_type)
             print("[*] Testing starts")
@@ -230,9 +213,6 @@ def main():
         print("[*] Making warp file starts")
         warp_file_name = FISR_for_video_Warp_Img(args,flow_file_name) # make warp file in '.mat' format.
         
-        """ to load a lighter train data to reduce a time consumption for loading """
-        args.train_data_path = './data/LR_sample_5seq.mat'
-        args.train_label_path = './data/HR_sample_5seq.mat'
         """ Open session """
         with tf.Session(config=tf.ConfigProto(
                 gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=args.fraction_gpu,
@@ -247,11 +227,6 @@ def main():
 
             # build graph
             print("[*] Exp: ", args.exp_num)
-            print("[*] Building FISRnet ...")
-            model_net.build_model()
-            print("[*] Successfully build.")
-            # show network architecture
-            show_all_variables()
             # launch the graph in a session
             print("Model:", args.net_type)
             print("[*] FISR Testing starts")
