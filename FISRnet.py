@@ -1013,7 +1013,7 @@ class FISRnet(object):
 
             ###======== Normalize & Clip Flow ========###
             flow_sample = flow[fr, :h, :w, :]
-            flow_sample = flow_sample / H / 2
+            flow_sample = flow_sample / 96 / 2
             flow_sample = np.expand_dims(np.clip(flow_sample, -1, 1), axis=0)
 
             ###======== Normalize & Clip Warp Image ========###
@@ -1075,7 +1075,7 @@ class FISRnet(object):
                 fr_name = FISR_img_dir + '/pred_YUV_{}.png'.format(
                     str(fr * 2 + seq_i).zfill(math.ceil(math.log10(2 * (num_fr - 1)))))
                 yuv_img.save(fr_name)
-
+            
             print(
                 " <FISR processing> [%4d/%4d]-th input multiple data sample (stride1), time: %4.4f(minutes)  " \
                 % (fr + 1, num_fr - 2, (time.time() - start_time) / 60))
