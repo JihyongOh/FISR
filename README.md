@@ -2,7 +2,7 @@
 **This is the official repository of FISR (AAAI2020).**
 
 We provide the training and test code along with the trained weights and the dataset (train+test) used for FISR. 
-If you find this repository useful, please consider citing our paper.
+If you find this repository useful, please consider citing our [paper](https://arxiv.org/abs/1912.07213).
 
 **Reference**:  
 > Soo Ye Kim*, Jihyong Oh*, and Munchurl Kim "FISR: Deep Joint Frame Interpolation and Super-Resolution with A Multi-scale Temporal Loss", *Thirty-Fourth AAAI Conference on Artificial Intelligence*, 2020. (* *equal contribution*)
