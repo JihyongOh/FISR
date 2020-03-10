@@ -20,6 +20,24 @@ Our code is implemented using Tensorflow, and was tested under the following set
 ### Quick Start
 1. Download the source code in a directory of your choice **\<source_path\>**.
 2. Download our 4K test dataset from [this link]( https://www.dropbox.com/s/101g9kdobgwl8x6/test.zip?dl=0) and unzip the 'test' folder in **\<source_path\>/data/test**, then you can get an input dataset (LR LFR), a flow data, a warped data and an output dataset (HR HFR) placed in **\<source_path\>/data/test/LR_LFR**, **\<source_path\>/data/test/flow** , **\<source_path\>/data/test/warped**  and **\<source_path\>/data/test/HR_HFR**, respectively. 
+```
+FISR
+├── data
+   └── test
+       ├── flow
+           ├── LR_Surfing_SlamDunk_test_ss1.flo
+       ├── HR_HFR
+           ├── HR_vid_1_fr_07171_seq_2.png
+           ├── HR_vid_1_fr_07171_seq_3.png
+           └── ...
+       ├── LR_LFR
+           ├── LR_vid_1_fr_07171_seq_1.png 
+           ├── LR_vid_1_fr_07171_seq_3.png
+           └── ...
+       ├── warped
+           ├── LR_Surfing_SlamDunk_test_ss1_warp.mat
+       
+```
 3. Download the pre-trained weights from [this link]( https://www.dropbox.com/s/usmoijfvnr3ok1q/FISRnet_exp1.zip?dl=0) and then unzip it to place in **\<source_path\>/checkpoint_dir/FISRnet_exp1**.
 4. Run **main.py** with the following options in parse_args:  
 **(i) For testing the our 4K test dataset input:**  
