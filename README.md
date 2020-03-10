@@ -84,10 +84,26 @@ python main.py --phase 'FISR_for_video' --exp_num 1 --frame_num 5 --frame_folder
 ### Quick Start
 1. Download the source code in a directory of your choice **\<source_path\>**.
 2. Download our train dataset from [this link]( https://www.dropbox.com/s/n71hzqis6hpggcs/train.zip?dl=0) and unzip the 'train' folder in **\<source_path\>/data/train**, then you can get an input dataset (LR LFR), a two flow data (stride 1&2), a two warped data (stride 1&2) and an output dataset (HR HFR) placed in **\<source_path\>/data/train/LR_LFR**, **\<source_path\>/data/train/flow** , **\<source_path\>/data/train/warped**  and **\<source_path\>/data/train/HR_HFR**, respectively. 
- 
+ ```
+FISR
+└── data
+   └── train
+       ├── flow
+           ├── LR_Surfing_SlamDunk_5seq_ss1.flo
+           ├── LR_Surfing_SlamDunk_5seq_ss2.flo
+       ├── HR_HFR
+           ├── HR_Surfing_SlamDunk_5seq.mat
+       ├── LR_LFR
+           ├── LR_Surfing_SlamDunk_5seq.mat
+       ├── warped
+           ├── LR_Surfing_SlamDunk_5seq_ss1_warp.mat  
+           ├── LR_Surfing_SlamDunk_5seq_ss2_warp.mat
+```
 3. Run **main.py** with the following options in parse_args:  
 '--phase' as **'train'**, ‘--exp_num’, as **number for experiment, for example 7, which yields ‘FISRnet_exp7’** '--train_data_path' as **'./data/train/LR_LFR/LR_Surfing_SlamDunk_5seq.mat'**, '--train_flow_data_path' as **'./data/train/flow/LR_Surfing_SlamDunk_5seq_ss1.flo'**, '--train_flow_ss2_data_path' as **'./data/train/flow/LR_Surfing_SlamDunk_5seq_ss2.flo'**, '--train_warped_data_path' as **'./data/train/warped/LR_Surfing_SlamDunk_5seq_ss1_warp.mat'**, '--train_warped_ss2_data_path' as **'./data/train/warped/LR_Surfing_SlamDunk_5seq_ss2_warp.mat'**, '--train_label_path' as **'./data/train/HR_HFR/HR_Surfing_SlamDunk_5seq.mat'**
-
+```bash
+python main.py --phase 'train' --exp_num 7 --train_data_path './data/train/LR_LFR/LR_Surfing_SlamDunk_5seq.mat' --train_flow_data_path './data/train/flow/LR_Surfing_SlamDunk_5seq_ss1.flo' --train_flow_ss2_data_path './data/train/flow/LR_Surfing_SlamDunk_5seq_ss2.flo --train_warped_data_path './data/train/warped/LR_Surfing_SlamDunk_5seq_ss1_warp.mat' --train_warped_ss2_data_path './data/train/warped/LR_Surfing_SlamDunk_5seq_ss2_warp.mat' --train_label_path './data/train/HR_HFR/HR_Surfing_SlamDunk_5seq.mat'
+```
 ### Description
 * **Running the train option** will train FISRnet and save the trained weights in **\<source_path\>/checkpoint_dir/FISRnet_exp~**.
 * The trained model can be tested with **test** or **FISR_for_video** options.
