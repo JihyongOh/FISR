@@ -55,6 +55,7 @@ FISR
 python main.py --phase 'test' --exp_num 1 --test_data_path './data/test/LR_LFR' --test_flow_data_path './data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo' --test_warped_data_path './data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat' --test_label_path './data/test/HR_HFR'
 ```
 **(ii) For FISR testing on an one single folder, which contains a single scene (.png file input in YUV format):**  
+'--phase' as **'FISR_for_video'**, ‘--exp_num' as **1**, ‘--frame_num' as **numbers of input frames you want to convert, in our example, 5**, ‘--frame_folder_path’ as **folder path that you want to apply FISRnet, in our example, 'E:/FISR_Github/FISR_test_folder/scene1'**, '--FISR_input_size' as **(1080, 1920)** (ex) for 2K), and make sure that you have to place all our modified files (we consider 'relative paths' for a convenience) in 'FISR_tfoptflow' for computing flows and warping images automatically. Please also refer a description of **How to make flow and warped files by using PWC-Net**.
 ```
 FISR
 └── FISR_test_folder
@@ -66,7 +67,6 @@ FISR
        └── ...
            
 ```
-'--phase' as **'FISR_for_video'**, ‘--exp_num' as **1**, ‘--frame_num' as **numbers of input frames you want to convert, in our example, 5**, ‘--frame_folder_path’ as **folder path that you want to apply FISRnet, in our example, 'E:/FISR_Github/FISR_test_folder/scene1'**, '--FISR_input_size' as **(1080, 1920)** (ex) for 2K), and make sure that you have to place all our modified files (we consider 'relative paths' for a convenience) in 'FISR_tfoptflow' for computing flows and warping images automatically. Please also refer a description of **How to make flow and warped files by using PWC-Net**.
 ```bash
 python main.py --phase 'FISR_for_video' --exp_num 1 --frame_num 5 --frame_folder_path 'E:/FISR_Github/FISR_test_folder/scene1' --FISR_input_size (1080, 1920)
 ```
