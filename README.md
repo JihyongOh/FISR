@@ -22,7 +22,7 @@ Our code is implemented using Tensorflow, and was tested under the following set
 2. Download our 4K test dataset from [this link]( https://www.dropbox.com/s/101g9kdobgwl8x6/test.zip?dl=0) and unzip the 'test' folder in **\<source_path\>/data/test**, then you can get an input dataset (LR LFR), a flow data, a warped data and an output dataset (HR HFR) placed in **\<source_path\>/data/test/LR_LFR**, **\<source_path\>/data/test/flow** , **\<source_path\>/data/test/warped**  and **\<source_path\>/data/test/HR_HFR**, respectively. 
 ```
 FISR
-├── data
+└── data
    └── test
        ├── flow
            ├── LR_Surfing_SlamDunk_test_ss1.flo
@@ -35,15 +35,41 @@ FISR
            ├── LR_vid_1_fr_07171_seq_3.png
            └── ...
        ├── warped
-           ├── LR_Surfing_SlamDunk_test_ss1_warp.mat
-       
+           ├── LR_Surfing_SlamDunk_test_ss1_warp.mat  
 ```
 3. Download the pre-trained weights from [this link]( https://www.dropbox.com/s/usmoijfvnr3ok1q/FISRnet_exp1.zip?dl=0) and then unzip it to place in **\<source_path\>/checkpoint_dir/FISRnet_exp1**.
+```
+FISR
+└── checkpoint_dir
+   └── FISRnet_exp1
+       ├── checkpoint
+       ├── FISRnet-122000.data-00000-of-00001
+       ├── FISRnet-122000.index
+       ├── FISRnet-122000.meta
+           
+```
 4. Run **main.py** with the following options in parse_args:  
 **(i) For testing the our 4K test dataset input:**  
-'--phase' as **'test'**, '--exp_num' as **1**, '--test_data_path' as **'./data/test/LR_LFR'**, '--test_flow_data_path' as **'./data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo'**, '--test_warped_data_path' as **'./data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat'**, ‘--test_label_path’ as **'./data/test/HR_HFR**        
+'--phase' as **'test'**, '--exp_num' as **1**, '--test_data_path' as **'./data/test/LR_LFR'**, '--test_flow_data_path' as **'./data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo'**, '--test_warped_data_path' as **'./data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat'**, ‘--test_label_path’ as **'./data/test/HR_HFR'**
+```bash
+python main.py --phase 'test' --exp_num 1 --test_data_path './data/test/LR_LFR' --test_flow_data_path './data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo' --test_warped_data_path './data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat' --test_label_path './data/test/HR_HFR'
+```
 **(ii) For FISR testing on an one single folder, which contains a single scene (.png file input in YUV format):**  
+```
+FISR
+└── FISR_test_folder
+   └── scene1
+       ├── seq_0001.png
+       ├── seq_0002.png
+       ├── seq_0003.png
+       ├── seq_0004.png
+       └── ...
+           
+```
 '--phase' as **'FISR_for_video'**, ‘--exp_num' as **1**, ‘--frame_num' as **numbers of input frames you want to convert, in our example, 5**, ‘--frame_folder_path’ as **folder path that you want to apply FISRnet, in our example, 'E:/FISR_Github/FISR_test_folder/scene1'**, '--FISR_input_size' as **(1080, 1920)** (ex) for 2K), and make sure that you have to place all our modified files (we consider 'relative paths' for a convenience) in 'FISR_tfoptflow' for computing flows and warping images automatically. Please also refer a description of **How to make flow and warped files by using PWC-Net**.
+```bash
+python main.py --phase 'FISR_for_video' --exp_num 1 --frame_num 5 --frame_folder_path 'E:/FISR_Github/FISR_test_folder/scene1' --FISR_input_size (1080, 1920)
+```
 
 ### Description
 * **Running the test option** will read the three input files, which are the LR LFR input sequences as **.png** files, the flows as pre-made **.flo** file and the warped frames as pre-made **.mat** file, respectively. Then it will save the predicted HR HFR results (FISR) in .png format in **\<source_path\>/test_img_dir/FISRnet_exp1**. The 70 YUV FISR results with 10 scenes will be converted into RGB files and **the performances (PSNR & SSIM on VFI-SR & SR separately) will be measured as in the paper**. **For faster testing** (to acquire performances only), you may comment the line for saving the predicted images as .png files.
