@@ -759,8 +759,8 @@ class FISRnet(object):
         # restore the checkpoint
         _, _ = self.load(self.checkpoint_dir)
 
-        test_data_path = glob.glob(os.path.join(self.test_data_path, '*.png'))
-        test_label_path = glob.glob(os.path.join(self.test_label_path, '*.png'))
+        test_data_path = sorted(glob.glob(os.path.join(self.test_data_path, '*.png')))
+        test_label_path = sorted(glob.glob(os.path.join(self.test_label_path, '*.png')))
 
         print(" Start to read flow data (test).")
         flow_path = self.test_flow_data_path
