@@ -37,7 +37,7 @@ FISR
        ├── warped
            ├── LR_Surfing_SlamDunk_test_ss1_warp.mat  
 ```
-3. Download the pre-trained weights from [this link]( https://www.dropbox.com/s/usmoijfvnr3ok1q/FISRnet_exp1.zip?dl=0) and then unzip it to place in **\<source_path\>/checkpoint_dir/FISRnet_exp1**.
+3. Download the pre-trained weights from [this link](https://www.dropbox.com/s/hfzzddfocmmazso/FISRnet_exp1.zip?dl=0) and then unzip it to place in **\<source_path\>/checkpoint_dir/FISRnet_exp1**.
 ```
 FISR
 └── checkpoint_dir
