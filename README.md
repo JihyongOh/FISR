@@ -116,4 +116,4 @@ python main.py --phase 'train' --exp_num 7 --train_data_path './data/train/LR_LF
 Please contact us via email (jhoh94@kaist.ac.kr or sooyekim@kaist.ac.kr) for any problems regarding the released code.
 
 ## License
-The source code is free for research and education use only. Any comercial use should get formal permission first.
+The source code is free for research and education use only. Any commercial use should get formal permission first.
