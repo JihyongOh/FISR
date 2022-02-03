@@ -5,7 +5,7 @@ We provide the training and test code along with the trained weights and the dat
 If you find this repository useful, please consider citing our [paper](https://arxiv.org/abs/1912.07213).
 
 **Reference**:  
-> Soo Ye Kim*, Jihyong Oh*, and Munchurl Kim "FISR: Deep Joint Frame Interpolation and Super-Resolution with A Multi-scale Temporal Loss", *Thirty-Fourth AAAI Conference on Artificial Intelligence*, 2020. (* *equal contribution*)
+> Soo Ye Kim*, Jihyong Oh*, and Munchurl Kim "FISR: Deep Joint Frame Interpolation and Super-Resolution with a Multi-scale Temporal Loss", *Thirty-Fourth AAAI Conference on Artificial Intelligence*, 2020. (* *equal contribution*)
 
 ### Requirements
 Our code is implemented using Tensorflow, and was tested under the following setting:  
