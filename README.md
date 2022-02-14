@@ -1,4 +1,10 @@
 # FISR
+
+[![ArXiv](https://img.shields.io/badge/ArXiv-Paper-<COLOR>.svg)](https://arxiv.org/abs/1912.07213)
+[![AAAI2020](https://img.shields.io/badge/AAAI2020-Paper-<COLOR>.svg)](https://ojs.aaai.org/index.php/AAAI/article/view/6788)
+[![GitHub Stars](https://img.shields.io/github/stars/JihyongOh/FISR?style=social)](https://github.com/JihyongOh/FISR)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=JihyongOh/FISR)
+
 **This is the official repository of FISR (AAAI2020).**
 
 We provide the training and test code along with the trained weights and the dataset (train+test) used for FISR. 
