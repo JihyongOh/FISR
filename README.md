@@ -11,7 +11,17 @@ We provide the training and test code along with the trained weights and the dat
 If you find this repository useful, please consider citing our [paper](https://arxiv.org/abs/1912.07213).
 
 **Reference**:  
-> Soo Ye Kim*, Jihyong Oh*, and Munchurl Kim "FISR: Deep Joint Frame Interpolation and Super-Resolution with a Multi-scale Temporal Loss", *Thirty-Fourth AAAI Conference on Artificial Intelligence*, 2020. (* *equal contribution*)
+> Soo Ye Kim*, Jihyong Oh*, and Munchurl Kim, "FISR: Deep Joint Frame Interpolation and Super-Resolution with a Multi-scale Temporal Loss", *AAAI Conference on Artificial Intelligence*, 2020. (* *equal contribution*)
+
+**BibTeX**
+```bibtex
+@inproceedings{kim2020fisr,
+  title={FISR: Deep Joint Frame Interpolation and Super-Resolution with a Multi-scale Temporal Loss},
+  author={Kim, Soo Ye and Oh, Jihyong and Kim, Munchurl},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  year={2020}
+}
+```
 
 ### Requirements
 Our code is implemented using Tensorflow, and was tested under the following setting:  
@@ -54,14 +64,16 @@ FISR
        ├── FISRnet-122000.meta
            
 ```
-4. Run **main.py** with the following options in parse_args:  
-**(i) For testing the our 4K test dataset input:**  
-'--phase' as **'test'**, '--exp_num' as **1**, '--test_data_path' as **'./data/test/LR_LFR'**, '--test_flow_data_path' as **'./data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo'**, '--test_warped_data_path' as **'./data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat'**, ‘--test_label_path’ as **'./data/test/HR_HFR'**
+4. Run **main.py** with the following options in parse_args: 
+
+**(i) For testing on our 4K test dataset input:**  
+
 ```bash
 python main.py --phase 'test' --exp_num 1 --test_data_path './data/test/LR_LFR' --test_flow_data_path './data/test/flow/LR_Surfing_SlamDunk_test_ss1.flo' --test_warped_data_path './data/test/warped/LR_Surfing_SlamDunk_test_ss1_warp.mat' --test_label_path './data/test/HR_HFR'
 ```
-**(ii) For FISR testing on an one single folder, which contains a single scene (.png file input in YUV format):**  
-'--phase' as **'FISR_for_video'**, ‘--exp_num' as **1**, ‘--frame_num' as **numbers of input frames you want to convert, in our example, 5**, ‘--frame_folder_path’ as **folder path that you want to apply FISRnet, in our example, 'E:/FISR_Github/FISR_test_folder/scene1'**, '--FISR_input_size' as **(1080, 1920)** (ex) for 2K), and make sure that you have to place all our modified files (we consider 'relative paths' for a convenience) in 'FISR_tfoptflow' for computing flows and warping images automatically. Please also refer a description of **How to make flow and warped files by using PWC-Net**.
+
+**(ii) For FISR testing on a single folder, which contains a single scene (.png file input in YUV format):**  
+'--phase' as **'FISR_for_video'**, ‘--exp_num' as **1**, ‘--frame_num' as **numbers of input frames you want to convert, in our example, 5**, ‘--frame_folder_path’ as **folder path that you want to apply FISRnet, in our example, 'E:/FISR_Github/FISR_test_folder/scene1'**, '--FISR_input_size' as **(1080, 1920)** (e.g. for 2K), and make sure that you have placed all necessary files (we consider 'relative paths' for a convenience) in 'FISR_tfoptflow' for computing flows and warping images automatically. Please also refer the description below on **How to make flow and warped files by using PWC-Net**.
 ```
 FISR
 └── FISR_test_folder
@@ -73,6 +85,9 @@ FISR
        └── ...
            
 ```
+
+Example:
+
 ```bash
 python main.py --phase 'FISR_for_video' --exp_num 1 --frame_num 5 --frame_folder_path 'E:/FISR_Github/FISR_test_folder/scene1' --FISR_input_size (1080, 1920)
 ```
@@ -106,10 +121,11 @@ FISR
            ├── LR_Surfing_SlamDunk_5seq_ss2_warp.mat
 ```
 3. Run **main.py** with the following options in parse_args:  
-'--phase' as **'train'**, ‘--exp_num’, as **number for experiment, for example 7, which yields ‘FISRnet_exp7’** '--train_data_path' as **'./data/train/LR_LFR/LR_Surfing_SlamDunk_5seq.mat'**, '--train_flow_data_path' as **'./data/train/flow/LR_Surfing_SlamDunk_5seq_ss1.flo'**, '--train_flow_ss2_data_path' as **'./data/train/flow/LR_Surfing_SlamDunk_5seq_ss2.flo'**, '--train_warped_data_path' as **'./data/train/warped/LR_Surfing_SlamDunk_5seq_ss1_warp.mat'**, '--train_warped_ss2_data_path' as **'./data/train/warped/LR_Surfing_SlamDunk_5seq_ss2_warp.mat'**, '--train_label_path' as **'./data/train/HR_HFR/HR_Surfing_SlamDunk_5seq.mat'**
 ```bash
 python main.py --phase 'train' --exp_num 7 --train_data_path './data/train/LR_LFR/LR_Surfing_SlamDunk_5seq.mat' --train_flow_data_path './data/train/flow/LR_Surfing_SlamDunk_5seq_ss1.flo' --train_flow_ss2_data_path './data/train/flow/LR_Surfing_SlamDunk_5seq_ss2.flo --train_warped_data_path './data/train/warped/LR_Surfing_SlamDunk_5seq_ss1_warp.mat' --train_warped_ss2_data_path './data/train/warped/LR_Surfing_SlamDunk_5seq_ss2_warp.mat' --train_label_path './data/train/HR_HFR/HR_Surfing_SlamDunk_5seq.mat'
 ```
+`--exp_num` should be set accordingly.
+
 ### Description
 * **Running the train option** will train FISRnet and save the trained weights in **\<source_path\>/checkpoint_dir/FISRnet_exp~**.
 * The trained model can be tested with **test** or **FISR_for_video** options.
