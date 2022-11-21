@@ -11,4 +11,4 @@ Pillow==7.0.0
 scikit_learn==0.22.1
 skimage==0.0
 SSIM_PIL==1.0.10
-tensorflow==2.1.0
+tensorflow==2.9.3
